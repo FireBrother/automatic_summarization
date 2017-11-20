@@ -9,10 +9,6 @@ class myTrainDataSet(Dataset):
         self.label = []
         with open(text_file,'r') as f:
             for line in f.readlines():
-                #print(line)
-                if len(self.data)== 10:
-                    break
-
                 text = line.split('#')[0].split()
                 label = line.split('#')[1].split()
                 tmp_data = []
@@ -61,10 +57,9 @@ class myTestDataSet(Dataset):
                     #print(pre_text,line)
                     self.data.append(torch.LongTensor(tmp_data))
                     self.label.append(tmp_labels)
-                    #print(tmp_labels)
                     tmp_data = []
                     tmp_labels = []
-                    break
+                    #break
                 pre_text = text
                 tmp_labels.append(label)
                 for word in words:
@@ -72,10 +67,6 @@ class myTestDataSet(Dataset):
                         tmp_data.append(word_to_id[word])
                     else:
                         tmp_data.append(0)
-
-        #print(self.data)
-        #print(self.label)
-                # print(torch.LongTensor(tmp_data).size())
     def __len__(self):
         return len(self.data)
 
