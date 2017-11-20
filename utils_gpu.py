@@ -46,26 +46,17 @@ def read_description(filename, word_to_id):
     return type_text
 
 def load_dict(filename):
-    f = codecs.open(filename,'r',encoding='utf-8')
-    word_to_id = {'unk':0}
-    id_to_word = {0:'unk'}
-    count = 1
-    for line in f.readlines():
-        word = line.split(' ')[0]
-        word_to_id[word] = count
-        id_to_word[count] = word
-        count+=1
-    f.close()
-    return word_to_id,id_to_word
+    word_to_idx = dict()
+    idx_to_word = dict()
+    with open(filename,'r') as f:
+        count = 0
+        for line in f.readlines():
+            line = line.strip()
+            word_to_idx[line] = count
+            idx_to_word[count] = line
+            count+=1
+    return word_to_idx,idx_to_word
 
-def makeCases(sentences, types):
-    X, Y, Type= [], [], []
-    for i in range(len(types)):
-        x,y,z = makeForOneCase(sentences[i],types[i])
-        X.append(x)
-        Y.append(y)
-        Type.append(z)
-    return X,Y,Type
 
 def make_text_cases(sentences, types, type_to_texts):
     X, Y, Text= [], [], []
@@ -78,24 +69,11 @@ def make_text_cases(sentences, types, type_to_texts):
     return X,Y,Text
 
 def make_case(s):
-    tmpIn = torch.LongTensor(1, len(s) - 1)
-    tmpOut = torch.LongTensor(1, len(s) - 1)
+    tmpIn = torch.LongTensor(1,1, len(s) - 1)
+    tmpOut = torch.LongTensor(1,1, len(s) - 1)
     for i in range(1, len(s)):
         w = s[i]
         w_b = s[i - 1]
         tmpIn[0][i - 1] = w_b
         tmpOut[0][i - 1] = w
     return autograd.Variable(tmpIn), autograd.Variable(tmpOut)
-
-def makeForOneCase(s, type):
-
-    tmpIn = torch.LongTensor(1,len(s)-1)
-    tmpOut = torch.LongTensor(1,len(s)-1)
-    tmpType = torch.LongTensor(1,len(s)-1)
-    for i in range(1, len(s)):
-        w = s[i]
-        w_b = s[i - 1]
-        tmpIn[0][i-1] = w_b
-        tmpOut[0][i-1] = w
-        tmpType[0][i-1] = type[i-1]
-    return autograd.Variable(tmpIn).cuda(), autograd.Variable(tmpOut).cuda(),autograd.Variable(tmpType).cuda()

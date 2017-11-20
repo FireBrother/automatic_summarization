@@ -9,6 +9,7 @@ from torch.nn.init import *
 class CNN_RNN(nn.Module):
     def __init__(self, vocab_size, input_channel, hidden_channel, embedding_dim, hidden_dim, num_layers=1):
         super(CNN_RNN, self).__init__()
+        self.num_layers = num_layers
         self.embedding_dim = embedding_dim
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
@@ -40,6 +41,7 @@ class CNN_RNN(nn.Module):
 
     def forward(self, text_input, summary_input, hidden):
         length = summary_input.size(1)
+        #print(summary_input)
         summary_embeds = self.embeddings(summary_input)
         # rnn部分输入summary_input Tensor(batch_size = 1, summary_length)
         text_embeds = self.embeddings(text_input)
@@ -52,7 +54,8 @@ class CNN_RNN(nn.Module):
         text_features_1 = self.ReLU(self.pool1(self.conv1(text_embeds)))
         text_features_2 = self.ReLU(self.pool2(self.conv2(text_features_1)))
         text_features_2 = text_features_2.view(-1, 12 * 256)
-        text_embed = self.ReLU(self.linear_output(text_features_2)).view(1, 1, self.embedding_dim)
+        #print(text_features_2.size())
+        text_embed = self.ReLU(self.linear1(text_features_2)).view(1, 1, self.embedding_dim)
 
         text_embeds = []
         for i in range(length):
@@ -61,16 +64,18 @@ class CNN_RNN(nn.Module):
 
         embeds = torch.cat((summary_embeds, text_embeds), 2)
         # embeds : (1, summary_length, embed_dim * 2 )
+        #print(embeds.size())
         output, hidden = self.lstm(embeds, hidden)
+        #print(output.size())
         output = output.contiguous().view(output.size(0) * output.size(1), output.size(2))
-        output = self.linear(output)
+        output = self.linear_output(output)
 
         return output, hidden
 
-    def initHidden(self, num_layers=1):
-        return (Variable(torch.zeros(num_layers, 1, self.hidden_dim)),
-                Variable(torch.zeros(num_layers, 1, self.hidden_dim)))
+    def initHidden(self):
+        return (Variable(torch.zeros(self.num_layers, 1, self.hidden_dim)),
+                Variable(torch.zeros(self.num_layers, 1, self.hidden_dim)))
 
-    def initHidden_gpu(self, num_layers=1):
-        return (Variable(torch.zeros(num_layers, 1, self.hidden_dim)).cuda(),
-                Variable(torch.zeros(num_layers, 1, self.hidden_dim)).cuda())
+    def initHidden_gpu(self):
+        return (Variable(torch.zeros(self.num_layers, 1, self.hidden_dim)).cuda(),
+                Variable(torch.zeros(self.num_layers, 1, self.hidden_dim)).cuda())
