@@ -46,17 +46,19 @@ class myTestDataSet(Dataset):
             tmp_labels = []
             for line in f.readlines():
 
-                if not line == pre_text and not pre_text=="":
+                text = line.split('#')[0]
+                words = text.split()
+                label = line.split('#')[1]
+                if not text == pre_text and not pre_text=="":
+                    #print(pre_text,line)
                     self.data.append(torch.LongTensor(tmp_data))
                     self.label.append(tmp_labels)
-
+                    #print(tmp_labels)
                     tmp_data = []
                     tmp_labels = []
-                pre_text = line
-                text = line.split('#')[0].split()
-                label = line.split('#')[1]
+                pre_text = text
                 tmp_labels.append(label)
-                for word in text:
+                for word in words:
                     if word in word_to_id:
                         tmp_data.append(word_to_id[word])
                     else:
