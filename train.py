@@ -7,6 +7,7 @@ import torch.optim as optim
 import logging
 import logging.handlers
 import time
+import torch.backends.cudnn
 from myDataSet import *
 from torch.utils.data import *
 from test import *
@@ -58,16 +59,19 @@ for epoch in range(epochNum):
         #print(case)
         text = autograd.Variable(train_data[0])
         label = autograd.Variable(train_data[1])
-
-        states = model.initHidden_gpu(num_layers)
+        summary = autograd.Variable(train_data[2])
+        states = model.initHidden()
         #print(text,label.size())
-        output, states = model(text, label, states)
+        output, states = model(text, summary, states)
         words_count += label.size()[1]
+        output_seq = []
         for i in range(label.size()[1]):
             topv, topi = output[i].data.topk(1)
-            if not label.data[0][i] and topi[0] == label.data[0][i]:
-                acc_count += 1
 
+            if not label.data[0][i]==0 and topi[0] == label.data[0][i]:
+                acc_count += 1
+            output_seq.append(topi[0])
+        print(output_seq)
         loss += criterion(output, label.view(-1))
         case += 1
         if (case % batch_size ==0):

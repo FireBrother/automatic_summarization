@@ -3,7 +3,7 @@ vocab_threhold = 5
 
 data = {'train':[],'test':[],'dev':[]}
 
-symbols = ['<d>','</d>','<p>','</p>','<s>','</s>']
+symbols = ['<p>','</p>','<s>','</s>']
 with open('data/DUC2014/data.json','r') as f:
     jsons = json.load(f)
     for one_json in jsons:
