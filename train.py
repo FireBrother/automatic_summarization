@@ -24,23 +24,27 @@ logger.addHandler(handler)  # 为logger添加handler
 logger.setLevel(logging.DEBUG)
 
 torch.cuda.device(0)
-batch_size = 10
+batch_size = 1
 epochNum = 50
-num_layers = 2
-embedding_num = 256
+num_layers = 1
+embedding_num = 512
 hidden_num = 512
 
 word_to_idx, idx_to_word = load_dict('data/vocab.txt')
 train_data_set = myTrainDataSet('data/train.txt',word_to_idx)
 train_size = len(train_data_set)
 train_data_loader = DataLoader(train_data_set,1,shuffle=True)
-test_data_set = myTestDataSet('data/test.txt',word_to_idx)
+test_data_set = myTestDataSet('data/test_with_subject.txt',word_to_idx)
 test_data_loader = DataLoader(test_data_set,1,shuffle=False)
 model = CNN_RNN(len(word_to_idx),1,1,embedding_dim=embedding_num,hidden_dim=hidden_num)
 print(model)
 print(len(train_data_set),len(test_data_set))
+#print(word_to_idx)
+
+model.cuda()
 optimizer = optim.Adam(model.parameters())
 criterion = nn.CrossEntropyLoss()
+
 
 t1 = time.clock()
 for epoch in range(epochNum):
@@ -53,10 +57,11 @@ for epoch in range(epochNum):
     evaluation(model,test_data_loader,word_to_idx,idx_to_word)
     for train_data in train_data_loader:
         model.zero_grad()
-        #print(case)
-        text = autograd.Variable(train_data[0])
-        label = autograd.Variable(train_data[1])
-        summary = autograd.Variable(train_data[2])
+#        print(train_data[0],train_data[1],train_data[2])
+        text = autograd.Variable(train_data[0]).cuda()
+        label = autograd.Variable(train_data[1]).cuda()
+        summary = autograd.Variable(train_data[2]).cuda()
+        states = model.initHidden_gpu()
         #print(text,label.size())
         output, states = model(text, summary)
         words_count += label.size()[1]
@@ -66,15 +71,17 @@ for epoch in range(epochNum):
 
             if not label.data[0][i]==0 and topi[0] == label.data[0][i]:
                 acc_count += 1
-            output_seq.append(topi[0])
-        print(output_seq)
+            output_seq.append(idx_to_word[topi[0]])
+        
+        #print(output_seq)
         loss += criterion(output, label.view(-1))
         case += 1
         if (case % batch_size ==0):
             loss = loss / batch_size
 
-            if case % (batch_size * 5) == 0:
+            if case % (batch_size ) == 0:
                 print(epoch, case / batch_size, time.clock() - t1,loss.data[0])
+                print(output_seq)
                 t1 = time.clock()
             loss.backward()
             torch.nn.utils.clip_grad_norm(model.parameters(), 0.5)

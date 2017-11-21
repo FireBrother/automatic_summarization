@@ -65,8 +65,6 @@ class CNN_RNN(nn.Module):
         text_embeds = torch.cat(text_embeds, 1)
 
         # embeds : (1, summary_length, embed_dim  )
-        #print(embeds.size())
-        #print(summary_embeds.size(),text_embeds.size())
         summary_embeds = torch.cat((summary_embeds,text_embeds),2)
         output, hidden = self.lstm(summary_embeds, hidden)
 
