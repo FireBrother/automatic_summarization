@@ -9,11 +9,12 @@ class myTrainDataSet(Dataset):
         self.label = []
         with open(text_file,'r') as f:
             for line in f.readlines():
-                text = line.split('#')[0].split()
-                label = line.split('#')[1].split()
+                text = line.split('^')[0].split()
+                label = line.split('^')[1].split()
                 tmp_data = []
                 tmp_label = []
-
+#                if len(self.data)==10 :
+#                    break
                 for word in text:
                     if word in word_to_id:
                         tmp_data.append(word_to_id[word])
@@ -46,27 +47,34 @@ class myTestDataSet(Dataset):
         with open(text_file,'r') as f:
 
             pre_text = ""
-            tmp_data = []
             tmp_labels = []
+            tmp_data = []
             for line in f.readlines():
 
-                text = line.split('#')[0]
+                text = line.split('^')[0]
                 words = text.split()
-                label = line.split('#')[1]
+                label = line.split('^')[1]
+                if len(tmp_data)==0:
+                    for word in words:
+                        if word in word_to_id:
+                            tmp_data.append(word_to_id[word])
+                        else:
+                            tmp_data.append(0)
                 if not text == pre_text and not pre_text=="":
                     #print(pre_text,line)
                     self.data.append(torch.LongTensor(tmp_data))
+                    #print(len(tmp_data))
                     self.label.append(tmp_labels)
+                    #print(tmp_labels)
                     tmp_data = []
                     tmp_labels = []
-                    #break
+    #                break
                 pre_text = text
                 tmp_labels.append(label)
-                for word in words:
-                    if word in word_to_id:
-                        tmp_data.append(word_to_id[word])
-                    else:
-                        tmp_data.append(0)
+
+            self.data.append(torch.LongTensor(tmp_data))
+            print(len(tmp_data))
+            self.label.append(tmp_labels)
     def __len__(self):
         return len(self.data)
 

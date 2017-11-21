@@ -30,20 +30,17 @@ num_layers = 2
 embedding_num = 256
 hidden_num = 512
 
-word_to_idx, idx_to_word = load_dict('vocab.txt')
-train_data_set = myTrainDataSet('train.txt',word_to_idx)
+word_to_idx, idx_to_word = load_dict('data/vocab.txt')
+train_data_set = myTrainDataSet('data/train.txt',word_to_idx)
 train_size = len(train_data_set)
 train_data_loader = DataLoader(train_data_set,1,shuffle=True)
-test_data_set = myTestDataSet('test.txt',word_to_idx)
-test_data_loader = DataLoader(test_data_set,1,shuffle=True)
+test_data_set = myTestDataSet('data/test.txt',word_to_idx)
+test_data_loader = DataLoader(test_data_set,1,shuffle=False)
 model = CNN_RNN(len(word_to_idx),1,1,embedding_dim=embedding_num,hidden_dim=hidden_num)
 print(model)
-#print(word_to_idx)
-
-#model.cuda()
+print(len(train_data_set),len(test_data_set))
 optimizer = optim.Adam(model.parameters())
 criterion = nn.CrossEntropyLoss()
-
 
 t1 = time.clock()
 for epoch in range(epochNum):
@@ -60,9 +57,8 @@ for epoch in range(epochNum):
         text = autograd.Variable(train_data[0])
         label = autograd.Variable(train_data[1])
         summary = autograd.Variable(train_data[2])
-        states = model.initHidden()
         #print(text,label.size())
-        output, states = model(text, summary, states)
+        output, states = model(text, summary)
         words_count += label.size()[1]
         output_seq = []
         for i in range(label.size()[1]):
